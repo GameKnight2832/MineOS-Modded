@@ -56,6 +56,10 @@
 	localizationDependency = "Файл локализации",
 	login = "Авторизация",
 	
+	host = "Сервер приложений",
+	hostAuto = "Выбирать автоматически",
+	hostDirect = "Напрямую",
+	hostMirror = "Зеркало",	
 	profile = "Профиль",
 	nickname = "Никнейм",
 	password = "Пароль",

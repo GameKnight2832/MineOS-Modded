@@ -57,6 +57,10 @@
 	previewDepencency = "Preview image",
 	
 	login = "Log in",
+	host = "Market server",
+	hostAuto = "Choose automatically",
+	hostDirect = "Direct",
+	hostMirror = "Mirror",
 	profile = "Profile",
 	nickname = "Nickname",
 	password = "Password",

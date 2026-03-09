@@ -13,8 +13,6 @@ local SHA = require("SHA-256")
 
 --------------------------------------------------------------------------------
 
-local host = "http://mineos.buttex.ru/MineOSAPI/2.04/"
-
 local overviewIconsCount = 14
 local overviewAnimationDelay = 0.05
 local overviewForceDecay = 0.15
@@ -28,6 +26,11 @@ local cachePath = appMarketPath .. "Cache/"
 
 local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 local localization = system.getLocalization(currentScriptDirectory .. "Localizations/") 
+
+local hosts = {
+	{ localization.hostDirect, "http://mineos.buttex.ru/MineOSAPI/2.04/"       },
+	{ localization.hostMirror, "http://hohol.mineos.buttex.ru/MineOSAPI/2.04/" }
+}
 
 local categories = {
 	{ icon = "🎸", name = localization.categoryApplications },
@@ -102,8 +105,10 @@ end
 
 local search = ""
 local appWidth, appHeight, appHSpacing, appVSpacing, currentPage, appsPerPage, appsPerWidth, appsPerHeight = 32, 6, 2, 1, 0
-local config, userVersions, systemVersions, user
+local host, config, userVersions, systemVersions, user
 local updateFileList, editPublication, messagesItem
+
+-- local host = hosts[2][2]
 
 --------------------------------------------------------------------------------
 
@@ -170,11 +175,36 @@ local function loadConfig()
 			orderDirection = 1,
 			singleSession = false,
 			hideApplicationIcons = false,
-			hideApplicationPreviews = false
+			hideApplicationPreviews = false,
+			hostId = nil
 		}
 	end
-
+	
 	messagesItem.hidden = not user.token
+end
+
+local function updateHost()
+	if config.hostId then
+		host = hosts[config.hostId][2]
+		return
+	end
+
+	for _, value in pairs(hosts) do
+		local success = internet.rawRequest(
+			value[2] .. "test.php",
+			nil,
+			nil,
+			function()
+			end
+		)
+
+		if success then
+			host = value[2]
+			return
+		end
+	end
+
+	GUI.alert("No available hosts found")
 end
 
 --------------------------------------------------------------------------------
@@ -950,11 +980,36 @@ local function settings()
 		settings()
 	end
 
+	local function addHostZalupa(layout)
+		layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.host))
+
+		local hostComboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+		hostComboBox:addItem(localization.hostAuto).onTouch = function(workspace, item)
+			config.hostId = nil
+			updateHost()
+			saveConfig()
+		end
+
+		for key, value in pairs(hosts) do
+			hostComboBox:addItem(value[1]).onTouch = function()
+				config.hostId = key
+				updateHost()
+				saveConfig()
+			end
+
+			if key == config.hostId then
+				hostComboBox.selectedItem = hostComboBox:count()
+			end
+		end
+	end
+
 	local function addAccountShit(login, register, recover)
 		contentContainer:removeChildren()
 		
 		local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
 		
+		addHostZalupa(layout)
+
 		layout:addChild(GUI.label(1, 1, 36, 1, 0x0, login and localization.login or register and localization.createAccount or recover and localization.changePassword)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 		local nameInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.nickname))
 		local emailInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", login and localization.nicknameOrEmail or "E-mail"))
@@ -1040,6 +1095,8 @@ local function settings()
 			contentContainer:removeChildren()
 			local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
 
+			addHostZalupa(layout)
+			
 			layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.profile))
 
 			local textLayout = layout:addChild(GUI.layout(1, 1, 36, 5, 1, 1))
@@ -2279,6 +2336,7 @@ end
 ----------------------------------- .!. ---------------------------------------------
 
 loadConfig()
+updateHost()
 
 lastMethod = loadCategory
 
