@@ -38,7 +38,7 @@ local
 	input,
 	internetExecute =
 
-	"MineOS EFI",
+	"MineOS EFI Modded by Gameknight283",
 	"Change label",
 	"key_down",
 	"component_added",
